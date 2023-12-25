@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  nginx:
+    image: 'nginx:latest'
+    ports:
+      - '8087:80'
+    links:
+      - php
+    volumes:
+      - ./logs:/var/log/nginx
+      - ./nginx-conf:/etc/nginx/conf.d
+      - ./webroot:/var/www/html
+    depends_on:
+      - php
+# Modify /docker/lemp/php-dockerfile to add php modules
+  php:
+    build:
+      dockerfile: php-dockerfile
+    volumes:
+      - ./webroot:/var/www/html
+      - ./php.ini:/usr/local/etc/php/php.ini
+    depends_on:
+      - mariadb
+# Error: : 'Access denied for user 'root'@'localhost' ->  cd /docker/lemp/ -> docker-compose down -> cd db-data -> rm -rf * -> cd .. -> docker-compose up -d
+# This happens when modifying password after initial container creation so it must be recreated
+  mariadb:
+    image: 'mariadb:latest'
+    ports:
+      - '3307:3306'
+    volumes:
+      - ./db-data:/var/lib/mysql
+    environment:
+        - MYSQL_ROOT_PASSWORD=<YOUR ROOT PASSWORD>
+        - MYSQL_ROOT_HOST=%
+#        - MYSQL_DATABASE
+#        - MYSQL_USER=
+#        - MYSQL_PASSWORD=
+        - MARIADB_AUTO_UPGRADE=true
